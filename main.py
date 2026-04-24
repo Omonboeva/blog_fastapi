@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="📰 Blog API",
+    title=" Blog API",
     description="FastAPI + PostgreSQL + Alembic",
     version="1.0.0",
     lifespan=lifespan,
@@ -41,7 +41,7 @@ app.include_router(comments.router, prefix=API_PREFIX)
 async def root() -> dict:
     return {
         "status": "ok",
-        "message": "Blog API ishlayapti! 🎉",
+        "message": "Blog API ishlayapti! ",
         "docs": "/docs",
     }
 
