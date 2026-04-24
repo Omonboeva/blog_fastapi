@@ -16,14 +16,13 @@ class Comment(Base):
     likes_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # Foreign keys
     author_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     post_id: Mapped[int] = mapped_column(
         ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    # O'z-o'ziga munosabat (nested comments / replies)
+
     parent_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("comments.id", ondelete="CASCADE"), nullable=True, index=True
     )
@@ -38,10 +37,10 @@ class Comment(Base):
         nullable=False,
     )
 
-    # Relationships
+
     author: Mapped["User"] = relationship("User", back_populates="comments")
     post: Mapped["Post"] = relationship("Post", back_populates="comments")
-    # Nested replies
+
     replies: Mapped[List["Comment"]] = relationship(
         "Comment",
         back_populates="parent",

@@ -4,7 +4,6 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
-# ─── Base ───────────────────────────────────────────────────────────────────
 
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, examples=["john_doe"])
@@ -14,7 +13,7 @@ class UserBase(BaseModel):
     avatar_url: Optional[str] = None
 
 
-# ─── Create ─────────────────────────────────────────────────────────────────
+
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100)
@@ -27,8 +26,6 @@ class UserCreate(UserBase):
         return v.lower()
 
 
-# ─── Update ─────────────────────────────────────────────────────────────────
-
 class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=100)
     bio: Optional[str] = None
@@ -39,8 +36,6 @@ class UserPasswordUpdate(BaseModel):
     old_password: str
     new_password: str = Field(..., min_length=8)
 
-
-# ─── Response ───────────────────────────────────────────────────────────────
 
 class UserResponse(UserBase):
     id: int
@@ -53,7 +48,6 @@ class UserResponse(UserBase):
 
 
 class UserPublicResponse(BaseModel):
-    """Boshqalar ko'rishi uchun (email yashirilgan)."""
     id: int
     username: str
     full_name: Optional[str]
@@ -63,8 +57,6 @@ class UserPublicResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ─── Auth ───────────────────────────────────────────────────────────────────
 
 class TokenResponse(BaseModel):
     access_token: str

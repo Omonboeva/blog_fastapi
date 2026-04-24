@@ -11,9 +11,7 @@ from app.schemas.post import PostCreate, PostUpdate
 
 
 def _generate_slug(title: str, post_id: Optional[int] = None) -> str:
-    """Sarlavhadan slug generatsiya qilish."""
     slug = title.lower().strip()
-    # Lotin harflariga o'xshash kirill harflarini almashtirish
     replacements = {
         'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
         'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
@@ -25,7 +23,7 @@ def _generate_slug(title: str, post_id: Optional[int] = None) -> str:
     }
     for cyr, lat in replacements.items():
         slug = slug.replace(cyr, lat)
-    # Harflar va raqamlardan tashqari hamma narsani o'chirish
+
     slug = re.sub(r'[^a-z0-9\s-]', '', slug)
     slug = re.sub(r'[\s_]+', '-', slug)
     slug = re.sub(r'-+', '-', slug).strip('-')
@@ -36,7 +34,7 @@ def _generate_slug(title: str, post_id: Optional[int] = None) -> str:
 
 
 async def _ensure_unique_slug(db: AsyncSession, slug: str, exclude_id: Optional[int] = None) -> str:
-    """Slug unikalligi ta'minlash."""
+
     query = select(Post).where(Post.slug == slug)
     if exclude_id:
         query = query.where(Post.id != exclude_id)
@@ -44,7 +42,6 @@ async def _ensure_unique_slug(db: AsyncSession, slug: str, exclude_id: Optional[
     existing = result.scalar_one_or_none()
 
     if existing:
-        # Raqam qo'shish
         counter = 1
         while True:
             new_slug = f"{slug}-{counter}"
@@ -58,7 +55,6 @@ async def _ensure_unique_slug(db: AsyncSession, slug: str, exclude_id: Optional[
 
 
 async def get_post(db: AsyncSession, post_id: int) -> Optional[Post]:
-    """ID bo'yicha postni olish (author bilan)."""
     result = await db.execute(
         select(Post)
         .options(selectinload(Post.author))
@@ -68,7 +64,6 @@ async def get_post(db: AsyncSession, post_id: int) -> Optional[Post]:
 
 
 async def get_post_by_slug(db: AsyncSession, slug: str) -> Optional[Post]:
-    """Slug bo'yicha postni olish."""
     result = await db.execute(
         select(Post)
         .options(selectinload(Post.author))
@@ -85,7 +80,6 @@ async def get_posts(
     author_id: Optional[int] = None,
     search: Optional[str] = None,
 ) -> tuple[List[Post], int]:
-    """Postlar ro'yxatini olish (filtrlash va pagination bilan)."""
     query = select(Post).options(selectinload(Post.author))
 
     if status:
@@ -102,12 +96,11 @@ async def get_posts(
             )
         )
 
-    # Jami soni
+
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
-    # Saralangan ma'lumotlar
     query = query.order_by(Post.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(query)
     posts = result.scalars().all()
@@ -118,8 +111,6 @@ async def get_posts(
 async def create_post(
     db: AsyncSession, post_in: PostCreate, author_id: int
 ) -> Post:
-    """Yangi post yaratish."""
-    # Dastlabki slug
     base_slug = _generate_slug(post_in.title)
     slug = await _ensure_unique_slug(db, base_slug)
 
@@ -140,8 +131,6 @@ async def create_post(
     db.add(db_post)
     await db.flush()
     await db.refresh(db_post)
-
-    # Author munosabatini yuklash
     result = await db.execute(
         select(Post)
         .options(selectinload(Post.author))
@@ -153,15 +142,12 @@ async def create_post(
 async def update_post(
     db: AsyncSession, db_post: Post, post_in: PostUpdate
 ) -> Post:
-    """Postni yangilash."""
     update_data = post_in.model_dump(exclude_unset=True)
 
-    # Sarlavha o'zgarganda slugni yangilash
     if "title" in update_data:
         base_slug = _generate_slug(update_data["title"])
         update_data["slug"] = await _ensure_unique_slug(db, base_slug, exclude_id=db_post.id)
 
-    # Status o'zgarganda published_at o'rnatish
     if "status" in update_data:
         if update_data["status"] == PostStatus.PUBLISHED and db_post.status != PostStatus.PUBLISHED:
             update_data["published_at"] = datetime.now(timezone.utc)
@@ -172,7 +158,6 @@ async def update_post(
     db.add(db_post)
     await db.flush()
 
-    # Yangilangan postni olish (author bilan)
     result = await db.execute(
         select(Post)
         .options(selectinload(Post.author))
@@ -182,7 +167,7 @@ async def update_post(
 
 
 async def increment_views(db: AsyncSession, post_id: int) -> None:
-    """Ko'rishlar sonini oshirish."""
+
     await db.execute(
         update(Post)
         .where(Post.id == post_id)
@@ -191,7 +176,6 @@ async def increment_views(db: AsyncSession, post_id: int) -> None:
 
 
 async def increment_likes(db: AsyncSession, post_id: int) -> int:
-    """Like sonini oshirish."""
     await db.execute(
         update(Post)
         .where(Post.id == post_id)
@@ -202,6 +186,5 @@ async def increment_likes(db: AsyncSession, post_id: int) -> int:
 
 
 async def delete_post(db: AsyncSession, db_post: Post) -> None:
-    """Postni o'chirish (cascade: commentlar ham o'chadi)."""
     await db.delete(db_post)
     await db.flush()

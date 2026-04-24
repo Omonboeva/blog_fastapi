@@ -6,25 +6,17 @@ from pydantic import BaseModel, Field
 from app.schemas.user import UserPublicResponse
 
 
-# ─── Base ───────────────────────────────────────────────────────────────────
-
 class CommentBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=2000)
 
 
-# ─── Create ─────────────────────────────────────────────────────────────────
-
 class CommentCreate(CommentBase):
-    parent_id: Optional[int] = None  # Reply uchun
+    parent_id: Optional[int] = None
 
-
-# ─── Update ─────────────────────────────────────────────────────────────────
 
 class CommentUpdate(BaseModel):
     content: str = Field(..., min_length=1, max_length=2000)
 
-
-# ─── Response ───────────────────────────────────────────────────────────────
 
 class CommentResponse(CommentBase):
     id: int
@@ -41,7 +33,6 @@ class CommentResponse(CommentBase):
     model_config = {"from_attributes": True}
 
 
-# Forward reference uchun
 CommentResponse.model_rebuild()
 
 

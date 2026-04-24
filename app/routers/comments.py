@@ -18,7 +18,6 @@ from app.schemas.comment import (
 router = APIRouter(tags=["💬 Comments"])
 
 
-# ─── Post commentlari ────────────────────────────────────────────────────────
 
 @router.get(
     "/posts/{post_id}/comments",
@@ -31,7 +30,7 @@ async def get_post_comments(
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedCommentsResponse:
-    """Post commentlarini olish (nested replies bilan)."""
+
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
@@ -58,17 +57,11 @@ async def create_comment(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CommentResponse:
-    """
-    Postga comment qo'shish.
-    - **content**: Comment matni
-    - **parent_id**: Reply uchun ota comment IDsi (ixtiyoriy)
-    """
-    # Post mavjudligini tekshirish
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
 
-    # Parent comment tekshirish
+
     if comment_in.parent_id:
         parent = await comment_crud.get_comment(db, comment_in.parent_id)
         if not parent or parent.post_id != post_id:
@@ -83,7 +76,6 @@ async def create_comment(
     return comment
 
 
-# ─── Comment CRUD ────────────────────────────────────────────────────────────
 
 @router.get(
     "/comments/{comment_id}",
@@ -94,7 +86,7 @@ async def get_comment(
     comment_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CommentResponse:
-    """ID bo'yicha commentni olish."""
+
     comment = await comment_crud.get_comment(db, comment_id)
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment topilmadi")
@@ -112,7 +104,7 @@ async def update_comment(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CommentResponse:
-    """Commentni yangilash (faqat muallif)."""
+
     comment = await comment_crud.get_comment(db, comment_id)
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment topilmadi")
@@ -136,7 +128,7 @@ async def like_comment(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """Commentga like berish."""
+
     comment = await comment_crud.get_comment(db, comment_id)
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment topilmadi")
@@ -155,7 +147,7 @@ async def delete_comment(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    """Commentni o'chirish (muallif yoki admin)."""
+
     comment = await comment_crud.get_comment(db, comment_id)
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment topilmadi")
@@ -169,7 +161,6 @@ async def delete_comment(
     await comment_crud.delete_comment(db, comment)
 
 
-# ─── Admin endpoints ─────────────────────────────────────────────────────────
 
 @router.patch(
     "/comments/{comment_id}/approve",
@@ -180,7 +171,7 @@ async def approve_comment(
     _: Annotated[User, Depends(get_current_admin_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """[Admin] Moderatsiyadan o'tkazish."""
+
     success = await comment_crud.approve_comment(db, comment_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment topilmadi")
@@ -198,7 +189,7 @@ async def get_user_comments(
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedCommentsResponse:
-    """Foydalanuvchining barcha commentlarini ko'rish."""
+
     skip = (page - 1) * page_size
     comments, total = await comment_crud.get_user_comments(
         db, user_id=user_id, skip=skip, limit=page_size

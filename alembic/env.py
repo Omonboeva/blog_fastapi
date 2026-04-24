@@ -1,47 +1,32 @@
 import asyncio
 from logging.config import fileConfig
-
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
-# ─── Sozlamalar ──────────────────────────────────────────────────────────────
-
-# alembic.ini konfiguratsiyasi
 config = context.config
-
-# Logging sozlamalari
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Loyiha sozlamalaridan DATABASE_URL olish
 import sys
 import os
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from app.core.config import settings
 from app.core.database import Base
-
-# Barcha modellarni import qilish (Alembic ularni ko'rishi uchun)
 from app.models import User, Post, Comment  # noqa: F401
 
-# sqlalchemy.url ni sozlamalardan olish
+
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
-# Metadata - avtomatik migratsiya uchun
+
 target_metadata = Base.metadata
 
 
-# ─── Offline migratsiya (DB ulanishsiz SQL fayllar yaratish) ─────────────────
+
 
 def run_migrations_offline() -> None:
-    """
-    'Offline' rejimda migratsiya.
-    Haqiqiy DB ulanishisiz SQL skript yaratadi.
-    """
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -56,7 +41,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-# ─── Online migratsiya (DB ga bevosita qo'llash) ─────────────────────────────
+
 
 def do_run_migrations(connection: Connection) -> None:
     context.configure(
@@ -71,7 +56,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """Asinxron engine bilan migratsiya."""
+
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -85,11 +70,9 @@ async def run_async_migrations() -> None:
 
 
 def run_migrations_online() -> None:
-    """'Online' rejimda asinxron migratsiya."""
     asyncio.run(run_async_migrations())
 
 
-# ─── Qaysi rejimda ishlashni aniqlash ────────────────────────────────────────
 
 if context.is_offline_mode():
     run_migrations_offline()

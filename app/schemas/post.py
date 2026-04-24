@@ -8,7 +8,6 @@ from app.models.post import PostStatus
 from app.schemas.user import UserPublicResponse
 
 
-# ─── Base ───────────────────────────────────────────────────────────────────
 
 class PostBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=300)
@@ -17,13 +16,8 @@ class PostBase(BaseModel):
     cover_image_url: Optional[str] = None
 
 
-# ─── Create ─────────────────────────────────────────────────────────────────
-
 class PostCreate(PostBase):
     status: PostStatus = PostStatus.DRAFT
-
-
-# ─── Update ─────────────────────────────────────────────────────────────────
 
 class PostUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3, max_length=300)
@@ -32,8 +26,6 @@ class PostUpdate(BaseModel):
     cover_image_url: Optional[str] = None
     status: Optional[PostStatus] = None
 
-
-# ─── Response ───────────────────────────────────────────────────────────────
 
 class PostResponse(PostBase):
     id: int
@@ -51,7 +43,6 @@ class PostResponse(PostBase):
 
 
 class PostListResponse(BaseModel):
-    """Ro'yxat uchun qisqaroq response."""
     id: int
     title: str
     slug: str
@@ -66,8 +57,6 @@ class PostListResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ─── Pagination ─────────────────────────────────────────────────────────────
 
 class PaginatedPostsResponse(BaseModel):
     items: list[PostListResponse]

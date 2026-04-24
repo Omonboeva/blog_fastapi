@@ -9,7 +9,6 @@ from app.schemas.comment import CommentCreate, CommentUpdate
 
 
 async def get_comment(db: AsyncSession, comment_id: int) -> Optional[Comment]:
-    """ID bo'yicha commentni olish."""
     result = await db.execute(
         select(Comment)
         .options(
@@ -28,7 +27,7 @@ async def get_post_comments(
     limit: int = 20,
     only_approved: bool = True,
 ) -> tuple[List[Comment], int]:
-    """Post commentlarini olish (faqat asosiy commentlar, replylar ichida)."""
+
     query = (
         select(Comment)
         .options(
@@ -36,13 +35,13 @@ async def get_post_comments(
             selectinload(Comment.replies).selectinload(Comment.author),
         )
         .where(Comment.post_id == post_id)
-        .where(Comment.parent_id.is_(None))  # Faqat top-level commentlar
+        .where(Comment.parent_id.is_(None))
     )
 
     if only_approved:
         query = query.where(Comment.is_approved == True)
 
-    # Jami soni
+
     count_query = select(func.count()).select_from(
         select(Comment)
         .where(Comment.post_id == post_id)
@@ -65,7 +64,6 @@ async def get_user_comments(
     skip: int = 0,
     limit: int = 20,
 ) -> tuple[List[Comment], int]:
-    """Foydalanuvchi commentlarini olish."""
     query = (
         select(Comment)
         .options(selectinload(Comment.author))
@@ -91,7 +89,7 @@ async def create_comment(
     post_id: int,
     author_id: int,
 ) -> Comment:
-    """Yangi comment yaratish."""
+
     db_comment = Comment(
         content=comment_in.content,
         post_id=post_id,
@@ -101,7 +99,6 @@ async def create_comment(
     db.add(db_comment)
     await db.flush()
 
-    # Munosabatlar bilan olish
     result = await db.execute(
         select(Comment)
         .options(
@@ -116,7 +113,6 @@ async def create_comment(
 async def update_comment(
     db: AsyncSession, db_comment: Comment, comment_in: CommentUpdate
 ) -> Comment:
-    """Commentni yangilash."""
     db_comment.content = comment_in.content
     db.add(db_comment)
     await db.flush()
@@ -133,7 +129,6 @@ async def update_comment(
 
 
 async def approve_comment(db: AsyncSession, comment_id: int) -> bool:
-    """Commentni tasdiqlash (admin uchun)."""
     result = await db.execute(
         update(Comment)
         .where(Comment.id == comment_id)
@@ -143,7 +138,6 @@ async def approve_comment(db: AsyncSession, comment_id: int) -> bool:
 
 
 async def like_comment(db: AsyncSession, comment_id: int) -> int:
-    """Comment likesini oshirish."""
     await db.execute(
         update(Comment)
         .where(Comment.id == comment_id)
@@ -156,6 +150,5 @@ async def like_comment(db: AsyncSession, comment_id: int) -> int:
 
 
 async def delete_comment(db: AsyncSession, db_comment: Comment) -> None:
-    """Commentni o'chirish."""
     await db.delete(db_comment)
     await db.flush()

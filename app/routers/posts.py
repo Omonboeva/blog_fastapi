@@ -16,7 +16,7 @@ from app.schemas.post import (
     PaginatedPostsResponse,
 )
 
-router = APIRouter(prefix="/posts", tags=["📝 Posts"])
+router = APIRouter(prefix="/posts", tags=[" Posts"])
 
 
 @router.get(
@@ -31,10 +31,6 @@ async def get_posts(
     author_id: Optional[int] = Query(None, description="Muallif ID"),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedPostsResponse:
-    """
-    Chop etilgan postlarni ko'rish.
-    Anonim foydalanuvchilar faqat `published` postlarni ko'ra oladi.
-    """
     skip = (page - 1) * page_size
     posts, total = await post_crud.get_posts(
         db,
@@ -67,7 +63,7 @@ async def get_my_posts(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedPostsResponse:
-    """Joriy foydalanuvchining barcha postlari (draft, published, archived)."""
+
     skip = (page - 1) * page_size
     posts, total = await post_crud.get_posts(
         db,
@@ -93,12 +89,7 @@ async def create_post(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PostResponse:
-    """
-    Yangi blog post yaratish.
-    - **title**: Post sarlavhasi
-    - **content**: Post matni (Markdown qo'llab-quvvatlanadi)
-    - **status**: `draft` | `published` | `archived`
-    """
+
     post = await post_crud.create_post(db, post_in, author_id=current_user.id)
     return post
 
@@ -112,7 +103,7 @@ async def get_post_by_slug(
     slug: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PostResponse:
-    """Slug bo'yicha postni olish va ko'rishlar sonini oshirish."""
+
     post = await post_crud.get_post_by_slug(db, slug)
     if not post:
         raise HTTPException(
@@ -126,7 +117,6 @@ async def get_post_by_slug(
             detail="Bu post hali nashr etilmagan",
         )
 
-    # Ko'rishlar sonini oshirish (background'da)
     await post_crud.increment_views(db, post.id)
     return post
 
@@ -141,12 +131,12 @@ async def get_post_by_id(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PostResponse:
-    """ID bo'yicha postni olish (o'z postlari uchun)."""
+
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
 
-    # Faqat o'z postini yoki admin ko'ra oladi
+
     if post.author_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Ruxsat yo'q")
 
@@ -164,7 +154,7 @@ async def update_post(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> PostResponse:
-    """Postni yangilash (faqat muallif yoki admin)."""
+
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
@@ -188,7 +178,7 @@ async def like_post(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """Postga like berish."""
+
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
@@ -207,7 +197,7 @@ async def delete_post(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    """Postni o'chirish (faqat muallif yoki admin)."""
+
     post = await post_crud.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post topilmadi")
@@ -221,7 +211,6 @@ async def delete_post(
     await post_crud.delete_post(db, post)
 
 
-# ─── Admin endpoints ─────────────────────────────────────────────────────────
 
 @router.get(
     "/admin/all",
@@ -237,7 +226,7 @@ async def admin_get_all_posts(
     _: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedPostsResponse:
-    """[Admin] Barcha postlarni (draft, published, archived) ko'rish."""
+
     skip = (page - 1) * page_size
     posts, total = await post_crud.get_posts(
         db, skip=skip, limit=page_size, status=status, author_id=author_id, search=search

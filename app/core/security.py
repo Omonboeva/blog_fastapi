@@ -10,12 +10,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Parolni tekshirish."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Parolni hash qilish."""
     return pwd_context.hash(password)
 
 
@@ -23,7 +21,6 @@ def create_access_token(
     data: dict,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    """Access token yaratish."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -36,7 +33,6 @@ def create_access_token(
 
 
 def create_refresh_token(data: dict) -> str:
-    """Refresh token yaratish."""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
@@ -44,7 +40,6 @@ def create_refresh_token(data: dict) -> str:
 
 
 def decode_token(token: str) -> Optional[dict]:
-    """Tokenni dekod qilish."""
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

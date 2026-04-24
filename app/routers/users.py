@@ -25,7 +25,6 @@ router = APIRouter(prefix="/users", tags=["👤 Users"])
 async def get_my_profile(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> UserResponse:
-    """Joriy foydalanuvchi profilini olish."""
     return current_user
 
 
@@ -39,7 +38,7 @@ async def update_my_profile(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> UserResponse:
-    """Joriy foydalanuvchi profilini yangilash."""
+
     updated_user = await user_crud.update_user(db, current_user, user_in)
     return updated_user
 
@@ -53,7 +52,6 @@ async def change_my_password(
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """Joriy foydalanuvchi parolini o'zgartirish."""
     success, message = await user_crud.change_password(
         db, current_user, password_data.old_password, password_data.new_password
     )
@@ -74,7 +72,7 @@ async def get_user_profile(
     username: str,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> UserPublicResponse:
-    """Username bo'yicha foydalanuvchi profilini olish (public)."""
+
     user = await user_crud.get_user_by_username(db, username)
     if not user or not user.is_active:
         raise HTTPException(
@@ -83,8 +81,6 @@ async def get_user_profile(
         )
     return user
 
-
-# ─── Admin endpoints ─────────────────────────────────────────────────────────
 
 @router.get(
     "/",
@@ -98,7 +94,7 @@ async def get_all_users(
     _: Annotated[User, Depends(get_current_admin_user)] = None,
     db: Annotated[AsyncSession, Depends(get_db)] = None,
 ) -> list[UserResponse]:
-    """[Admin] Barcha foydalanuvchilarni ko'rish."""
+
     users, _ = await user_crud.get_users(db, skip=skip, limit=limit, is_active=is_active)
     return users
 
@@ -113,7 +109,7 @@ async def delete_user(
     current_admin: Annotated[User, Depends(get_current_admin_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    """[Admin] Foydalanuvchini o'chirish."""
+
     if user_id == current_admin.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,7 +132,7 @@ async def deactivate_user(
     _: Annotated[User, Depends(get_current_admin_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """[Admin] Foydalanuvchini bloklash."""
+
     success = await user_crud.deactivate_user(db, user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Foydalanuvchi topilmadi")

@@ -30,7 +30,6 @@ class Post(Base):
     views_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     likes_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    # Foreign keys
     author_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -48,7 +47,6 @@ class Post(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    # Relationships
     author: Mapped["User"] = relationship("User", back_populates="posts")
     comments: Mapped[List["Comment"]] = relationship(
         "Comment", back_populates="post", cascade="all, delete-orphan"

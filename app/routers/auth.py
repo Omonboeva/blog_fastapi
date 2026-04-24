@@ -11,7 +11,7 @@ from app.core.security import create_access_token, create_refresh_token, decode_
 from app.crud import user as user_crud
 from app.schemas.user import UserCreate, UserResponse, TokenResponse, RefreshTokenRequest
 
-router = APIRouter(prefix="/auth", tags=["🔐 Auth"])
+router = APIRouter(prefix="/auth", tags=[" Auth"])
 
 
 @router.post(
@@ -24,13 +24,6 @@ async def register(
     user_in: UserCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> UserResponse:
-    """
-    Yangi foydalanuvchi ro'yxatdan o'tkazish.
-    - **username**: 3-50 ta belgi, faqat harf/raqam/_
-    - **email**: To'g'ri email manzil
-    - **password**: Kamida 8 ta belgi
-    """
-    # Email mavjudligini tekshirish
     existing_email = await user_crud.get_user_by_email(db, user_in.email)
     if existing_email:
         raise HTTPException(
@@ -38,7 +31,6 @@ async def register(
             detail="Bu email allaqachon ro'yxatdan o'tgan",
         )
 
-    # Username mavjudligini tekshirish
     existing_username = await user_crud.get_user_by_username(db, user_in.username)
     if existing_username:
         raise HTTPException(
@@ -59,11 +51,7 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
-    """
-    JWT token olish uchun login.
-    - **username**: Username yoki email
-    - **password**: Parol
-    """
+
     user = await user_crud.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -99,7 +87,7 @@ async def refresh_token(
     token_data: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
-    """Refresh token orqali yangi access token olish."""
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Refresh token noto'g'ri yoki muddati o'tgan",
